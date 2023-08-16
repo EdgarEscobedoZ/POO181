@@ -1,8 +1,8 @@
-{% extends 'plantilla.html' %}
+{% extends 'plantillaAdmin.html' %}
 
 {% block body%}
 
-<div class="mt-5 mb-5"><h1 class="display-1 text-center">Registro de Pacientes</h1></div>
+<div class="mt-5 mb-5"><h1 class="display-1 text-center">Registro de Medicos</h1></div>
 
     
     
@@ -13,15 +13,13 @@
     <div class="col-md-3"></div>
     <div class="col-md-6">
         <div class="card card-body mb-5">
-            <h1 class="text-center">Ingresar Paciente</h1>
-            <form action="/guardarPacientes" method="POST">
+            
+            <form action="/guardarMedico" method="POST">
                 <div class="mb-3">
                     <label class="label">Médico</label>
-                    <input type="text" class="form-control" value="{{rut.0.1}}" required readonly>
-                    <input type="text" class="form-control" name="Medico" value="{{rut.0.0}}" hidden required readonly>
+                    <input type="text" class="form-control" name="rfc" placeholder="RFC"  required >
                 </div>
                 <div class="mb-3">
-                    <label class="label">Paciente</label>
                     <input type="text" class="form-control" name="txtNombre" placeholder="Nombre" required>
                 </div>
                 <div class="mb-3">
@@ -31,17 +29,23 @@
                     <input type="text" class="form-control" name="txtAM" placeholder="Apellido Materno" required>
                 </div>
                 <div class="mb-3">
-                    <input class="form-control" type="date" name="txtNacimiento" placeholder="Fecha de Nacimiento" required>                        
+                    <input class="form-control" type="text" name="txtCedula" placeholder="Cedula Profesional" required>                        
                 </div>
                 <div class="mb-3">
-                    <input class="form-control" type="text" name="txtEnfermedades" placeholder="Enfermedades Crónicas" required>                        
+                    <input class="form-control" type="text" name="txtCorreo" placeholder="Correo" required>                        
                 </div>
                 <div class="mb-3">
-                    <input class="form-control" type="text" name="txtAlergias" placeholder="Alergias" required>                        
+                    <input class="form-control" type="text" name="txtContra" placeholder="Contraseña" required>                        
                 </div>
                 <div class="mb-3">
-                    <input class="form-control" type="text" name="txtAntecedentes" placeholder="Antecedentes" required>                        
+                    <select class="form-select" name="rol" required>
+                            <option selected>Seleccione un rol</option>
+                            <option value="1">Administrador</option>
+                            <option value="0">Médico</option>
+                        
+                    </select>
                 </div>
+                
                 <div class="d-grid gap-2"><button type="submit" class="btn btn-outline-primary">Guardar</button></div>
         
             </form>

@@ -14,7 +14,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
             
-              <script>Swal.fire('Success', 'Registro Completado','success')</script>
+              <script>Swal.fire('Success', 'Proceso Completado','success')</script>
               
             {% endfor %}
         {% endif %}
@@ -55,24 +55,10 @@
                             
                         </td>
                         <td>
-                            
-                        <a data-bs-toggle="modal" data-bs-target="#DesactivarR" class="btn btn-danger" data-record-id="{{ ruta[0] }}"><i class="bi bi-x-circle"></i></a>
+                        <button data-bs-toggle="modal" data-bs-target="#modal" class="delete-button btn btn-danger" data-record-id="{{ruta[0]}}"><i class="bi bi-x-circle"></i></button>
                         
-                        {% set vairable = ruta.0 %}
-                        <div class="modal fade" id="DesactivarR" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                    <h1 class="modal-title fs-5" id="exampleModalLabel">Desactivar Ruta</h1>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        ¿Está seguro que desea desactivar este usuario?
-                                    </div>
-                                    <div class="modal-footer">
-                                    <a class="btn btn-danger" id="confirm-delete">Sí</a>    
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>   
-                                    
+                        
+              
                         
                         </td>
                         <td><a class="btn btn-primary" href="/expedientePacientes/{{ruta.0}}"><i class="bi bi-archive-fill"></i></a></td>
@@ -81,15 +67,34 @@
                 </tbody>
                 
                 </table>    
+
     
             </div>
             
     
     
         </div>
+        
     </div>
-    <script>
-const modal = document.getElementById('DesactivarR');
+    <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">Desactivar Paciente</h1>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  ¿Está seguro que desea desactivar este usuario?
+              </div>
+              <div class="modal-footer">
+              <button class="btn btn-danger" id="confirm-delete">Sí</button>    
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>   
+              </div>
+          </div>
+      </div>
+  </div>
+  <script>
+const modal = document.getElementById('modal');
 const confirmButton = document.getElementById('confirm-delete');
 const deleteButtons = document.querySelectorAll('.delete-button');
 
@@ -98,21 +103,22 @@ let targetRow;
 deleteButtons.forEach(button => {
     button.addEventListener('click', (event) => {
       targetRow = event.target.closest('tr');
-      modal.style.display = 'flex';
+      modal.style.display = 'block';
     });
   });
 
   confirmButton.addEventListener('click', () => {
     if (targetRow) {
       const recordId = targetRow.querySelector('.delete-button').getAttribute('data-record-id');
-      fetch('/delete/${recordId}', {
+      fetch(`/delete/${recordId}`, {
         method: 'POST'
       })
       .then(response => response.json())
       .then(data => {
         if (data.success) {
           targetRow.remove();
-          modal.style.display = 'none';
+          modal.style.display ='none';
+          window.location.reload();
         } else {
           console.error('Error al eliminar el registro');
         }

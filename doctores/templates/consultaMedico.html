@@ -2,7 +2,7 @@
 
 {% block body%}
 
-<div class="mt-5 mb-5"><h1 class="display-1 text-center">Inicio</h1></div>
+<div class="mt-5 mb-5"><h1 class="display-1 text-center">Consulta Médico</h1></div>
 
     <div class="container text-center">
         {% with mensajes= get_flashed_messages() %}
@@ -24,20 +24,19 @@
         <div class="row">
             <!-- <div class="col-md-1"></div> -->
             <div>
-                <h1 class="text-center">Pacientes</h1>
+                
                 <table class="table" id="table">
                 <thead>
                     <tr class="table-success">
                         <th scope="col">Id</th>
-                        <th scope="col">Médico</th>
-                        <th scope="col">Paciente</th>
-                        <th scope="col">Fecha Nacimiento</th>
-                        <th scope="col">Enfermedades crónicas</th>
-                        <th scope="col">Alergias</th>
-                        <th scope="col">Antecedentes</th>
+                        <th scope="col">RFC</th>
+                        <th scope="col">Nombre</th>
+                        <th scope="col">Cedula</th>
+                        <th scope="col">Correo</th>
+                        <th scope="col">Contraseña</th>
+                        <th scope="col">Rol</th>
                         <th scope="col">Editar</th>
                         <th scope="col">Eliminar</th>
-                        <th scope="col">Expedientes</th>
                     </tr>
                 </thead>
                 <tbody class="table-group-divider">
@@ -51,7 +50,7 @@
                         <td>{{ruta.5}}</td>
                         <td>{{ruta.6}}</td>
                         <td>
-                            <a  href="/editarAdmin/{{ruta.0}}" class="btn btn-secondary"><i class="bi bi-pencil-fill"></i></a>
+                            <a  href="/editarMedico/{{ruta.0}}" class="btn btn-secondary"><i class="bi bi-pencil-fill"></i></a>
                             
                         </td>
                         <td>
@@ -61,7 +60,7 @@
               
                         
                         </td>
-                        <td><a class="btn btn-primary" href="/expedientePacientesAdmin/{{ruta.0}}"><i class="bi bi-archive-fill"></i></a></td>
+                        
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -110,7 +109,7 @@ deleteButtons.forEach(button => {
   confirmButton.addEventListener('click', () => {
     if (targetRow) {
       const recordId = targetRow.querySelector('.delete-button').getAttribute('data-record-id');
-      fetch(`/delete/${recordId}`, {
+      fetch(`/deleteMedicos/${recordId}`, {
         method: 'POST'
       })
       .then(response => response.json())

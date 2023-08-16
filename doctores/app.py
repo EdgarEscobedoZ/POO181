@@ -15,10 +15,11 @@ mysql=MySQL(app)
 
 
 class User(UserMixin):
-    def __init__(self, id, rfc, password):
+    def __init__(self, id, rfc, password, rol):
         self.id = id
         self.rfc = rfc
         self.password = password
+        self.rol = rol
 
     def get_id(self):
         return str(self.id)
@@ -35,14 +36,14 @@ def load_user(id):
     # print INSERT INTO `login` (`id`, `rfc`, `password`) VALUES ('1', 'QWWQ123456', '123');
     #login del back
     cursor = mysql.connection.cursor() 
-    cursor.execute('SELECT id, RFC, contraseña FROM Medicos WHERE id = %s', (id,))
+    cursor.execute('SELECT id, RFC, contraseña, rol FROM Medicos WHERE id = %s', (id,))
     persona = cursor.fetchone()
     if persona:
         print("Metodo: load_user(id), el usuario si coincide.")
         #return User(id='1', email='121038198@upq.edu.mx', password='123')
         print("Mi contra"+persona[2])
         
-        return User(id=persona[0], rfc=persona[1],password = persona[2])
+        return User(id=persona[0], rfc=persona[1],password = persona[2], rol=persona[3])
     
     return None
 
@@ -75,7 +76,7 @@ def login():
         print("Metodo: rfc(), antes de validar rfc y pass")
         if persona:
             print("Metodo: login(), rfc y pass correctos")
-            user = User(id=persona[0], rfc=persona[1], password=persona[2])
+            user = User(id=persona[0], rfc=persona[1], password=persona[2], rol=persona[3])
             if (persona[3] == 1):
                 flash('CONECTADO')
                 login_user(user)
@@ -131,6 +132,26 @@ def registroPaciente():
     conAlbums= consulta.fetchall()
     return render_template('registroPaciente.html', rut=conAlbums)
 
+@app.route('/registroMedico')
+@login_required
+def registroMedico():
+    if current_user:
+        id_doctor = current_user.id
+    consulta= mysql.connect.cursor()
+    consulta.execute('select id,concat(Medicos.nombre," ",Medicos.ap," ",Medicos.am) from Medicos where id='+str(id_doctor))
+    conAlbums= consulta.fetchall()
+    return render_template('registroMedico.html', rut=conAlbums)
+
+@app.route('/registroPacienteAdmin')
+@login_required
+def registroPacienteAdmin():
+    if current_user:
+        id_doctor = current_user.id
+    consulta= mysql.connect.cursor()
+    consulta.execute('select id,concat(Medicos.nombre," ",Medicos.ap," ",Medicos.am) from Medicos where id='+str(id_doctor))
+    conAlbums= consulta.fetchall()
+    return render_template('registroPacienteAdmin.html', rut=conAlbums)
+
 @app.route('/guardarPacientes', methods=['GET','POST'])
 def guardarPacientes():
     if request.method == 'POST':
@@ -148,10 +169,34 @@ def guardarPacientes():
         cs.execute('insert into Pacientes(medicoA,nombre,ap,apellidoM,fechaNac,enfermedades,alergias,antecedentes) values(%s,%s,%s,%s,%s,%s,%s,%s)',
         (VMedico,VNombre,VApellido_paterno,VApellido_materno,VFecha_de_nacimiento,VEnfermedades,VAlergias,VAntecedentes))
         mysql.connection.commit()
-        
-        
-    flash('El doctor fue agregado correctamente')
+    if current_user:
+        id_admin=current_user.rol
+    if id_admin==1:
+        flash('El paciente fue agregado correctamente')
+        return redirect(url_for('inicioAdmin'))
+    flash('El paciente fue agregado correctamente')
     return redirect(url_for('inicio'))
+
+@app.route('/guardarMedico', methods=['GET','POST'])
+def guardarMedico():
+    if request.method == 'POST':
+        cs= mysql.connection.cursor()
+        VMedico = request.form['rfc']
+        VNombre=request.form['txtNombre']
+        VApellido_paterno=request.form['txtAP']
+        VApellido_materno=request.form['txtAM']
+        VFecha_de_nacimiento=request.form['txtCedula']
+        vCorreo=request.form['txtCorreo']
+        VEnfermedades=request.form['txtContra']
+        VAlergias=request.form['rol']
+        
+        
+        cs.execute('insert into Medicos(RFC,nombre,ap,am,cedula,correo,contraseña,rol) values(%s,%s,%s,%s,%s,%s,%s,%s)',
+        (VMedico,VNombre,VApellido_paterno,VApellido_materno,VFecha_de_nacimiento,vCorreo,VEnfermedades,VAlergias))
+        mysql.connection.commit()
+    
+    flash('El médico fue agregado correctamente')
+    return redirect(url_for('consultaMedico'))
 
 @app.route('/exploracion')
 @login_required
@@ -162,6 +207,16 @@ def exploracion():
     consulta.execute('select Pacientes.id,concat(Pacientes.nombre," ",Pacientes.ap," ",Pacientes.apellidoM) from Pacientes where medicoA ='+str(id_doctor))
     conAlbums= consulta.fetchall()
     return render_template('exploracion.html', lsRegistro=conAlbums)
+
+@app.route('/exploracionAdmin')
+@login_required
+def exploracionAdmin():
+    if current_user:
+        id_doctor = current_user.id
+    consulta= mysql.connect.cursor()
+    consulta.execute('select Pacientes.id,concat(Pacientes.nombre," ",Pacientes.ap," ",Pacientes.apellidoM) from Pacientes where medicoA ='+str(id_doctor))
+    conAlbums= consulta.fetchall()
+    return render_template('exploracionAdmin.html', lsRegistro=conAlbums)
 
 @app.route('/guardarExploracion', methods=['GET','POST'])
 def guardarExploracion():
@@ -182,13 +237,13 @@ def guardarExploracion():
         (vPaciente,vFecha,vPeso,vAltura,vTemp,vLatidos,vSaturacion,vSintomas,vDiagnostico,vTratamiento))
         mysql.connection.commit()
     
+    if current_user:
+        id_admin=current_user.rol
+    if id_admin==1:
+        flash('La exploración fue agregada correctamente')
+        return redirect(url_for('inicioAdmin'))
     flash('La exploración fue agregada correctamente')
     return redirect(url_for('inicio'))
-
-@app.route('/diagnostico')
-@login_required
-def citasConsultas():
-    return render_template('diagnostico.html')
 
 @app.route('/editar/<id>')
 @login_required
@@ -197,6 +252,22 @@ def editar(id):
     cursorId.execute('select Pacientes.id,concat(Medicos.nombre," ",Medicos.ap," ",Medicos.am),Pacientes.nombre,Pacientes.ap,Pacientes.apellidoM,Pacientes.fechaNac,Pacientes.enfermedades,Pacientes.alergias,Pacientes.antecedentes from Medicos inner join Pacientes on Pacientes.MedicoA=Medicos.id  where Pacientes.id=%s',(id,))
     consId = cursorId.fetchone()
     return render_template('editarPaciente.html', rut=consId)
+
+@app.route('/editarMedico/<id>')
+@login_required
+def editarMedico(id):
+    cursorId=mysql.connection.cursor()
+    cursorId.execute('select Medicos.id,Medicos.RFC,Medicos.nombre,Medicos.ap,Medicos.am,Medicos.cedula,Medicos.correo,Medicos.contraseña,Medicos.rol from Medicos where id ='+id)
+    consId = cursorId.fetchone()
+    return render_template('editarMedico.html', rut=consId)
+
+@app.route('/editarAdmin/<id>')
+@login_required
+def editarAdmin(id):
+    cursorId=mysql.connection.cursor()
+    cursorId.execute('select Pacientes.id,concat(Medicos.nombre," ",Medicos.ap," ",Medicos.am),Pacientes.nombre,Pacientes.ap,Pacientes.apellidoM,Pacientes.fechaNac,Pacientes.enfermedades,Pacientes.alergias,Pacientes.antecedentes from Medicos inner join Pacientes on Pacientes.MedicoA=Medicos.id  where Pacientes.id=%s',(id,))
+    consId = cursorId.fetchone()
+    return render_template('editarPacienteAdmin.html', rut=consId)
 
 @app.route('/actualizar/<id>', methods=['POST'])
 def actualizar(id):
@@ -214,26 +285,81 @@ def actualizar(id):
         (vPaciente,vFecha,vPeso,vTemp,vLatidos,vSaturacion, vAntecedentes, id))
         print(vPaciente,vFecha,vPeso,vTemp,vLatidos,vSaturacion, vAntecedentes, id)
         mysql.connection.commit()
-    
+    if current_user:
+        id_admin=current_user.rol
+    if id_admin==1:
+        flash('El paciente fue actualizado correctamente')
+        return redirect(url_for('inicioAdmin'))
     flash('El paciente fue actualizado correctamente')
     return redirect(url_for('inicio'))
+
+@app.route('/actualizarMedico/<id>', methods=['POST'])
+def actualizarMedico(id):
+    if request.method == 'POST':
+        cs= mysql.connection.cursor()
+        vRFC = request.form['rfc']
+        vPaciente = request.form['txtNombre']
+        vFecha=request.form['txtAP']
+        vPeso=request.form['txtAM']
+        vTemp=request.form['txtCedula']
+        vLatidos=request.form['txtCorreo']
+        vSaturacion=request.form['txtContra']
+        vAntecedentes=request.form['rol']
+        
+        cs.execute('update Medicos set RFC=%s,nombre=%s,ap=%s,am=%s,cedula=%s,correo=%s,contraseña=%s,rol=%s where id=%s',
+        (vRFC,vPaciente,vFecha,vPeso,vTemp,vLatidos,vSaturacion, vAntecedentes, id))
+        mysql.connection.commit()
+    flash('El medico fue actualizado correctamente')
+    return redirect(url_for('consultaMedico'))
 
 @app.route('/delete/<int:record_id>', methods=['POST'])
 def delete_record(record_id):
     conn = mysql.connection.cursor()
     conn.execute("DELETE FROM Pacientes WHERE id = %s", (record_id,))
-    conn.commit()
+    conn.connection.commit()
     conn.close()
+    flash('Usuario Eliminado')
+    return jsonify({'success': True})
+
+@app.route('/deleteMedicos/<int:record_id>', methods=['POST'])
+def delete_recordMedico(record_id):
+    conn = mysql.connection.cursor()
+    conn.execute("DELETE FROM Medicos WHERE id = %s", (record_id,))
+    conn.connection.commit()
     conn.close()
+    flash('Usuario Eliminado')
     return jsonify({'success': True})
 
 @app.route('/expedientePacientes/<id>')
 @login_required
-def citasConsultas5(id):
+def expedientePacientes(id):
     consulta= mysql.connect.cursor()
     consulta.execute('select Exploraciones.id,concat(Pacientes.nombre," ",Pacientes.ap," ",Pacientes.apellidoM),Exploraciones.fecha,Exploraciones.peso,Exploraciones.altura,Exploraciones.temperatura,Exploraciones.latidos,Exploraciones.saturacion,Exploraciones.sintomas,Exploraciones.diagnostico,Exploraciones.tratamiento from Pacientes inner join Exploraciones on Exploraciones.paciente= Pacientes.id where Pacientes.id='+id)
     conAlbums= consulta.fetchall()
     return render_template('expedientes.html',lsConsulta=conAlbums)
+
+@app.route('/expedientePacientesAdmin/<id>')
+@login_required
+def expedientePacientesAdmin(id):
+    consulta= mysql.connect.cursor()
+    consulta.execute('select Exploraciones.id,concat(Pacientes.nombre," ",Pacientes.ap," ",Pacientes.apellidoM),Exploraciones.fecha,Exploraciones.peso,Exploraciones.altura,Exploraciones.temperatura,Exploraciones.latidos,Exploraciones.saturacion,Exploraciones.sintomas,Exploraciones.diagnostico,Exploraciones.tratamiento from Pacientes inner join Exploraciones on Exploraciones.paciente= Pacientes.id where Pacientes.id='+id)
+    conAlbums= consulta.fetchall()
+    return render_template('expedientesAdmin.html',lsConsulta=conAlbums)
+
+@app.route('/consultaMedico')
+@login_required
+def consultaMedico():
+    consulta= mysql.connect.cursor()
+    consulta.execute('select id,RFC,concat(Medicos.nombre," ",Medicos.ap," ",Medicos.am),cedula,correo,contraseña,rol from Medicos')
+    conAlbums= consulta.fetchall()
+    #print(conAlbums)
+    
+    return render_template('consultaMedico.html',lsConsulta = conAlbums)
+
+
+
+
+
 
 @app.route('/administracionMedicos2', methods=['GET','POST'])
 def administracionMedicos2():
