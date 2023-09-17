@@ -163,9 +163,7 @@ def guardarPacientes():
         VFecha_de_nacimiento=request.form['txtNacimiento']
         VEnfermedades=request.form['txtEnfermedades']
         VAlergias=request.form['txtAlergias']
-        VAntecedentes=request.form['txtAntecedentes']
-        
-        
+        VAntecedentes=request.form['txtAntecedentes']    
         cs.execute('insert into Pacientes(medicoA,nombre,ap,apellidoM,fechaNac,enfermedades,alergias,antecedentes) values(%s,%s,%s,%s,%s,%s,%s,%s)',
         (VMedico,VNombre,VApellido_paterno,VApellido_materno,VFecha_de_nacimiento,VEnfermedades,VAlergias,VAntecedentes))
         mysql.connection.commit()
